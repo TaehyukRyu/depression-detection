@@ -60,13 +60,10 @@
 #### 그룹화 근거
 
 **1. 우울증 문헌 검토**
-- **불안**: 주요 우울증 환자의 약 50%가 불안 증상을 동반[1]. DSM-5에서도 우울 진단 시 'anxious distress specifier'를 명시
+- **불안**: 주요 우울증 환자의 약 50%가 불안 증상을 동반. DSM-5에서도 우울 진단 시 ' 불안한 고통 동반'를 명시
 - **상처** (고립감, 외로움): PHQ-9 척도에 "자신이 실패자 같다", "죄책감" 등의 문항 포함. 사회적 고립은 지속성 우울장애의 핵심 요인[2]
-- **슬픔**: PHQ-9 1~2번 항목 "feeling down, depressed, hopeless"와 직접 일치
+- **슬픔**: PHQ-9 1~2번 항목과 직접 일치
 
-**2. 도메인 전문가 자문**
-- 청소년 상담 경험이 있는 지도교수의 임상적 판단
-- 실제 상담 현장에서 이 세 감정군이 우울 선별 신호로 자주 관찰됨
 
 **3. 실험적 검증**
 - 이 그룹화로 우울 신호 탐지율(Recall) **83.46%** 달성
@@ -104,13 +101,6 @@
 
 **결론**: 6개 대분류가 더 우수! 
 
-#### 왜 4개 라벨이 더 안 좋았나?
-
-**원인 분석**:
-- 감정 간 **미묘한 차이**가 우울 판단에 중요한 단서였음
-- 예시: "짜증난다"(분노) vs "좌절스럽다"(슬픔)
-  - 둘 다 부정 감정이지만 우울 신호로서의 의미가 다름
-  - 4개로 뭉뚱그리면서 이 정보가 손실됨
 
 **최종 전략**: 
 - ✅ **학습 시**: 6개 대분류 그대로 사용 (정보 보존)
@@ -127,6 +117,33 @@ depression_recall = recall_score(y_true_binary, y_pred_binary)
 
 ### 3. PHQ-9 도메인 지식 주입
 
+#### PHQ-9란?
+
+**PHQ-9 (Patient Health Questionnaire-9)**는 우울증을 선별하고 심각도를 평가하는 가장 널리 사용되는 자가보고식 설문지입니다.
+
+**핵심 특징**:
+- **9개 문항**: DSM-5의 주요 우울증 진단 기준 9가지를 직접 반영
+- **평가 기간**: 최근 2주간의 증상 빈도 측정
+- **점수 범위**: 0~27점 (각 문항 0~3점)
+  - 0~4점: 우울 증상 최소
+  - 5~9점: 경미한 우울
+  - 10~14점: 중등도 우울
+  - 15~19점: 중등도-심한 우울
+  - 20~27점: 심한 우울
+
+**PHQ-9의 9가지 증상**:
+1. 기분 저하, 우울감, 절망감
+2. 흥미나 즐거움 상실
+3. 수면 문제 (불면 또는 과다수면)
+4. 피로감, 기력 저하
+5. 식욕 변화 (감소 또는 증가)
+6. 자기 비하, 실패감, 죄책감
+7. 집중력 저하
+8. 느려진 말과 행동 또는 안절부절못함
+9. **자살이나 자해 생각** (가장 심각한 증상)
+
+#### 본 연구에서의 PHQ-9 활용
+
 **의미 유사도 기반 특징 추출**:
 ```python
 # PHQ-9 증상 키워드 벡터와 텍스트 벡터 간 코사인 유사도 계산
@@ -139,6 +156,14 @@ similarity_score = cosine_similarity(text_embedding, phq9_embedding)
 - **Indirect List** (가중치 1.0): 수면/식욕 변화, 불안 등 간접 증상
 
 ---
+
+**활용 효과**:
+- ✅ 우울 신호 탐지율(Recall) 향상: 82.29% → **83.46%** (+1.17%p)
+- ✅ False Negative 감소: 303건 → **283건** (-20건, 6.6% 개선)
+- ✅ 특히 자살/자해 관련 표현 탐지에 효과적
+
+---
+
 
 ### 4. 멀티모달 융합 아키텍처
 
@@ -267,7 +292,7 @@ PHQ-9 Feature (16dim)              ↓
 
 **🔍 핵심 발견**:
 - ✅ **Recall 향상**: False Negative 감소 (303건 → 283건 in 6-class)
-- ✅ **Precision 유지**: 과탐지 없이 민감도 개선
+- ✅ **Precision 유지**: 민감도 개선
 - ⚠️ **4-class에서는 효과 미미**: 이미 충분한 특징 학습
 
 ---
@@ -513,31 +538,6 @@ adolescent-depression-detection/
    - 프라이버시 보호 강화 (On-device 추론)
    - 편향성 검증 및 공정성 평가
 
----
-
-## 📚 참고 문헌
-
-[1] National Comorbidity Survey (1990-92). "Major depression frequently co-occurs with anxiety disorders"
-
-[2] Zimmerman, M. et al. (2013). "DSM-5 Anxious Distress Specifier for Depression"
-
-[3] Kroenke, K., et al. (2001). "The PHQ-9: Validity of a brief depression severity measure". *Journal of General Internal Medicine*, 16(9), 606-613.
-
-[4] Nenov-Matt, T., et al. (2020). "Loneliness, Social Isolation in Persistent Depressive Disorder". *Frontiers in Psychiatry*, 11, 608476.
-
----
-
-## 📄 라이선스
-
-이 프로젝트는 **MIT 라이선스** 하에 배포됩니다. 자세한 내용은 `LICENSE` 파일을 참조하세요.
-
----
-
-## 👥 팀 소개
-
-- **개발자**: [이름]
-- **지도교수**: [이름]
-- **소속**: [대학/기관]
 
 ---
 
@@ -545,21 +545,8 @@ adolescent-depression-detection/
 
 프로젝트 관련 문의사항은 아래로 연락 주시기 바랍니다:
 
-- 📧 Email: your.email@example.com
+- 📧 Email: xogur1578@gmail.com
 - 🐙 GitHub Issues: [링크]
 
 ---
 
-## 🙏 감사의 말
-
-- **AI Hub**: 감성 대화 말뭉치 데이터 제공
-- **KLUE Team**: KLUE-RoBERTa 사전학습 모델
-- **Hugging Face**: Transformers 라이브러리
-
----
-
-<div align="center">
-
-**⭐ 이 프로젝트가 도움이 되셨다면 Star를 눌러주세요! ⭐**
-
-</div>
