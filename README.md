@@ -1,4 +1,4 @@
-# 청소년 우울 신호 탐지 시스템 (Adolescent Depression Detection System)
+# 청소년 우울 신호 탐지 시스템 
 
 <div align="center">
 
