@@ -307,31 +307,40 @@ PHQ-9 Feature (16dim)              ↓
 | **Multimodal** | **📝+🎤** | **0.6466** | **0.9742** | **0.8266** | **0.8943** |
 
 **🔍 핵심 발견**:
-- ⚠️ **Accuracy 하락**: 음성 데이터 노이즈 및 품질 편차 영향
-- ✅ **Precision 향상**: 0.9459 → **0.9742** (False Positive 대폭 감소)
-- ⚠️ **Recall 하락**: 텍스트 모델이 더 민감한 탐지 수행
+- ⚠️ **Accuracy 하락**: 음성 모델의 학습 데이터 부족 및 텍스트 모델과의 학습 불균형
+- ✅ **Precision 향상**: 0.9459 → **0.9742** (False Positive 대폭 감소, 오탐 최소화)
+- ⚠️ **Recall 하락**: 0.9016 → 0.8266 (텍스트 단독 모델이 더 민감)
 
-**💡 운영 전략**:
-- **메인 모델**: Text + PHQ-9 (안정성 ↑)
-- **보조 모델**: Multimodal (정밀도 ↑, 2차 검증용)
+**💡 배포 결정**:
+- **최종 배포 모델**: Multimodal (텍스트 + 음성)
+  - **이유 1**: Precision 97.42%로 **오탐 최소화** (실제 우울 아닌 사람을 우울로 판단하는 것 방지)
+  - **이유 2**: 음성의 비언어적 정보(운율, 톤, 말의 속도)는 텍스트만으로 포착할 수 없는 우울 신호
+  - **이유 3**: 향후 음성 모델 개선으로 성능 향상 여지 존재
 
 ---
 
 ### 최종 성능 요약
 
 ```
-✨ 최종 선정 모델: Text (All) + PHQ-9 + 6-class Fine-tuning
+✨ 최종 배포 모델: Multimodal (Text + Audio + PHQ-9) + 6-class Fine-tuning
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📊 Overall Accuracy:          69.23%
+📊 Overall Accuracy:          64.66%
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🎯 우울 신호 탐지 성능 (불안+상처+슬픔):
-   - Precision:  83.17%  (False Positive 최소화)
-   - Recall:     83.46%  (실제 위험군 놓치지 않음)
-   - F1-Score:   83.31%  (균형잡힌 성능)
+   - Precision:  97.42%  (False Positive 최소화) ⭐
+   - Recall:     82.66%  (실제 위험군 놓치지 않음)
+   - F1-Score:   89.43%  (높은 정밀도)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-⚠️ False Negative: 283/1,711건 (16.5%)
-✅ True Positive:  1,428/1,711건 (83.5%)
+⚠️ False Negative: 111/640건 (17.3%)
+✅ True Positive:  529/640건 (82.7%)
 ```
+
+**💡 배포 전략**:
+- **최종 배포**: Multimodal (텍스트 + 음성 융합)
+  - Precision 97.42%로 **오탐지 최소화** (정밀도 우선)
+  - 음성 정보로 비언어적 우울 신호 포착
+- **실험 최고 성능**: Text Only (Recall 90.16%)
+  - 안정성과 민감도가 높지만,  현재의 성능 차이는 아키텍처 고도화(Fusion 방식 개선, 모델 변경 등)를 통해 충분히 극복 가능하며, 향후 감정 인식의 상한선이 훨씬 높은 멀티모달 방식을 최종 채택
 
 ---
 
@@ -421,49 +430,45 @@ print(f"권장 조치: {result['recommendation']}")
 ```
 adolescent-depression-detection/
 │
-├── data/                          # 데이터셋
-│   ├── Training_221115_add/       # AI Hub 원본 데이터
-│   ├── six_label_all_text.csv     # Phase 1 전처리 결과
-│   ├── four_label_all_text_phq9.csv  # Phase 2 데이터
-│   └── 음성데이터전처리_*.pkl     # Phase 3 MFCC 데이터
+├── docs/                                    # 문서 및 연구 자료
+│   ├── 018.감성대화_데이터_구축_가이드라인.pdf
+│   ├── 06_[자연어]영역 감성 대화 말뭉치.pdf
+│   ├── AI-Hub_데이터참고.pdf
+│   ├── Phase 1_ 라벨 & 문맥 & 모델 비교 (8개).pdf
+│   ├── Phase 2_ PHQ-9 가중치 효과 (4개).pdf
+│   ├── Phase 3_멀티모달 (2개)_최종.pdf
+│   └── 프로젝트_계획서.docx
 │
-├── models/                        # 학습된 모델
-│   ├── phase1_six_label_all_text_finetuning.pt
-│   ├── phase2_six_label_all_text_phq9.pt
-│   └── phase3_multimodal.pt
+├── models/                                  # 학습된 모델 파일
+│   └── models_README.md                     # 모델 설명 문서 
 │
-├── notebooks/                     # 실험 노트북
-│   ├── Phase_1_라벨_문맥_모델_비교.ipynb
-│   ├── Phase_2_PHQ9_가중치_효과.ipynb
-│   └── Phase_3_멀티모달.ipynb
+├── notebooks/                               # 실험 Jupyter 노트북
+│   ├── Phase 1_ 라벨 & 문맥 & 모델 비교 (8개).ipynb
+│   ├── Phase 2_ PHQ-9 가중치 효과 (4개).ipynb
+│   ├── Phase 3_멀티모달 (2개)_최종.ipynb
+│   └── 음성데이터_전처리.ipynb
 │
-├── src/                           # 소스 코드
-│   ├── preprocessing/
-│   │   ├── text_preprocessing.py
-│   │   └── audio_preprocessing.py
-│   ├── models/
-│   │   ├── text_model.py
-│   │   ├── audio_model.py
-│   │   └── multimodal_model.py
-│   ├── training/
-│   │   └── trainer.py
-│   └── evaluation/
-│       └── metrics.py
+├── results/                                 # 실험 결과 CSV
+│   ├── phase1_total_result.csv
+│   ├── phase2_total_result.csv
+│   └── phase3_total_result.csv
 │
-├── api/                           # FastAPI 서버
-│   ├── main.py
-│   └── schemas.py
+├── src/                                     # 소스 코드
+│   ├── SRC_README.md                        # 소스 코드 설명
+│   ├── inference.py                         # 추론 스크립트
+│   ├── model.py                             # 모델 정의
+│   ├── preprocessing.py                     # 데이터 전처리
+│   └── requirements.txt                     # 의존성 패키지
 │
-├── app/                           # Streamlit 앱
-│   └── streamlit_app.py
-│
-├── tests/                         # 테스트 코드
-│
-├── requirements.txt               # 의존성 패키지
-├── Dockerfile                     # Docker 설정
-├── README.md                      # 본 문서
-└── 프로젝트_계획서.docx             # 상세 계획서
+└── README.md                                # 프로젝트 메인 문서
 ```
+
+**주요 디렉토리 설명**:
+- **docs/**: 데이터셋 가이드라인, 실험 결과 PDF, 프로젝트 계획서
+- **models/**: 학습된 PyTorch 모델 체크포인트 (용량 문제로 Git LFS 사용 권장)
+- **notebooks/**: 3단계 실험 과정 재현 가능한 주피터 노트북
+- **results/**: 각 Phase별 성능 지표가 담긴 CSV 파일
+- **src/**: 배포용 핵심 코드 (모델 로딩, 추론, 전처리)
 
 ---
 
@@ -489,55 +494,57 @@ adolescent-depression-detection/
 
 ---
 
-## 🎓 연구 의의
-
-### 기술적 기여
-
-1. **체계적 라벨링 전략 수립**: 
-   - 임상 기준(PHQ-9, DSM-5)과 데이터 기반 실험을 통한 우울 신호 정의
-   - 4개 vs 6개 라벨 비교를 통한 정보 보존의 중요성 입증
-
-2. **도메인 지식 통합 방법론**: 
-   - PHQ-9 증상을 임베딩 유사도로 정량화하여 모델에 주입
-   - False Negative 7% 감소 효과
-
-3. **멀티모달 융합 최적화**: 
-   - 텍스트 중심 + 음성 보조 구조로 안정성과 정밀도 균형
-
-### 사회적 기여
-
-- **조기 개입 지원**: 상담사가 놓칠 수 있는 미묘한 우울 징후 포착
-- **객관적 평가 도구**: 주관적 판단 보완을 위한 정량적 지표 제공
-- **접근성 향상**: 비대면 상담 플랫폼에 통합 가능한 자동화 시스템
-
----
 
 ## 📌 제한사항 및 향후 과제
 
 ### 현재 제한사항
 
-- ⚠️ **데이터 편향**: 특정 상황(학업, 가족)에 편중된 대화 데이터
-- ⚠️ **음성 품질**: 녹음 환경 차이로 인한 MFCC 변동성
-- ⚠️ **일반화**: 청소년 외 연령층 적용 시 재학습 필요
+**1. 멀티모달 성능 불균형 문제** ⚠️
+- **텍스트 모델**: KLUE-RoBERTa 전체 파라미터 Fine-tuning 수행
+- **음성 모델**: 2,876건으로 LSTM 기반 학습 (파인튜닝 미수행)
+- **문제**: 
+  - 텍스트와 음성의 학습 규모 차이
+  - 텍스트는 사전학습 모델 활용, 음성은 LSTM 학습
+  - 두 모달리티의 특징을 평균/결합하면서 고성능 텍스트 모델이 저성능 음성 모델에 의해 희석됨
+- **결과**: 멀티모달 Accuracy 64.66% (Text Only 71.15% 대비 6.49%p 하락)
+
+**2. 컴퓨팅 리소스 제약** ⚠️
+- **GPU 부족**: Google Colab 무료 버전의 제한된 GPU 사용 시간
+  - 멀티모달 전체 학습 불가 (메모리 부족으로 배치 사이즈 축소)
+  - 음성 사전학습 모델(Wav2Vec 2.0 등) 실험 불가
+  - 하이퍼파라미터 튜닝 횟수 제한
+- **영향**: 최적 성능 미달성, 실험 반복 어려움
+
+**3. 데이터 편향**
+- 특정 상황(학업 스트레스, 가족 갈등)에 편중된 대화 데이터
+- 청소년 외 연령층 적용 시 재학습 필요
+
+**4. 음성 데이터 품질**
+- 현상: 실제 상담 데이터가 아닌 정제된 낭독/연기 데이터를 사용하여 감정의 깊이가 얕음.
+- 문제점: 우울감을 판단하는 핵심 요소인 '운율(Intonation)', '강세(Stress)', '발화 속도 변화' 등의 음향적 특징이 뚜렷하지 않아 모델 학습에 난항.
+
+---
 
 ### 향후 개선 방향
 
-1. **데이터 증강**:
-   - 다양한 상황 시나리오 추가 수집
-   - Back-translation, Paraphrasing 기법 적용
+**1. 멀티모달 성능 개선** 🎯 (최우선)
+- **음성 모델 고도화**:
+  - Wav2Vec 2.0, HuBERT 등 음성 사전학습 모델 Fine-tuning
 
-2. **모델 고도화**:
-   - Attention 메커니즘으로 중요 구간 식별
-   - Wav2Vec 2.0 등 최신 음성 모델 도입
+- **균형 잡힌 융합 전략**:
+  - 후기 융합 대신 중기 융합 실험
+  - 텍스트와 음성의 Cross-modal attention
 
-3. **실시간 모니터링**:
-   - 장기 대화 추적을 통한 우울 경향 변화 감지
-   - 개인화된 베이스라인 설정 및 이상 탐지
+**2. 컴퓨팅 리소스 확보**
+- **GPU 환경 개선**:
+  - Google Colab Pro 또는 AWS/GCP GPU 인스턴스 활용
+  - 모델 경량화 (LoRA, Adapter 기법)
+  - Mixed Precision Training (FP16) 활용
 
-4. **윤리적 고려**:
-   - 프라이버시 보호 강화 (On-device 추론)
-   - 편향성 검증 및 공정성 평가
-
+**3. 실시간 모니터링 시스템**
+- 장기 대화 추적을 통한 우울 경향 변화 감지
+- 개인화된 베이스라인 설정 및 이상 탐지
+- 시계열 분석 기법 적용
 
 ---
 
@@ -546,7 +553,7 @@ adolescent-depression-detection/
 프로젝트 관련 문의사항은 아래로 연락 주시기 바랍니다:
 
 - 📧 Email: xogur1578@gmail.com
-- 🐙 GitHub Issues: [링크]
+- 🐙 배포 link: [링크]
 
 ---
 
