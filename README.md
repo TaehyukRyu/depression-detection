@@ -465,7 +465,7 @@ adolescent-depression-detection/
 
 **주요 디렉토리 설명**:
 - **docs/**: 데이터셋 가이드라인, 실험 결과 PDF, 프로젝트 계획서
-- **models/**: 학습된 PyTorch 모델 체크포인트 (용량 문제로 Git LFS 사용 권장)
+- **models/**: 학습된 PyTorch 모델
 - **notebooks/**: 3단계 실험 과정 재현 가능한 주피터 노트북
 - **results/**: 각 Phase별 성능 지표가 담긴 CSV 파일
 - **src/**: 배포용 핵심 코드 (모델 로딩, 추론, 전처리)
