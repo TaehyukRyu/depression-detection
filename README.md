@@ -1,12 +1,16 @@
-# 청소년 우울 신호 탐지 시스템 
+# 청소년 우울 신호 탐지 시스템
 
 <div align="center">
 
 **텍스트와 음성 데이터를 활용한 멀티모달 딥러닝 기반 청소년 우울 신호 조기 탐지 시스템**
 
 [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![PyTorch](https://img.shields.io/badge/PyTorch-2.0.1-red.svg)](https://pytorch.org/)
-[![Transformers](https://img.shields.io/badge/Transformers-4.30.0-yellow.svg)](https://huggingface.co/transformers/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-red.svg)](https://pytorch.org/)
+[![Transformers](https://img.shields.io/badge/Transformers-4.30+-yellow.svg)](https://huggingface.co/transformers/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green.svg)](https://fastapi.tiangolo.com/)
+[![Streamlit](https://img.shields.io/badge/Streamlit-1.28+-orange.svg)](https://streamlit.io/)
+
+[🚀 **Live Demo**](http://43.201.10.85:8501) · [📧 Contact](mailto:xogur1578@gmail.com)
 
 </div>
 
@@ -22,6 +26,7 @@
 - [설치 및 실행](#-설치-및-실행)
 - [기술 스택](#-기술-스택)
 - [프로젝트 구조](#-프로젝트-구조)
+- [제한사항 및 향후 과제](#-제한사항-및-향후-과제)
 
 ---
 
@@ -29,156 +34,109 @@
 
 ### 배경 및 필요성
 
-기존 감성 분석 모델은 일상적인 부정 감정(짜증, 화남)과 임상적 주의가 필요한 우울 신호를 명확히 구분하지 못하는 한계가 있습니다. 특히 청소년의 대화에서는 단순한 불만과 실제 위험 신호가 혼재되어 나타나므로, 이를 정밀하게 구분할 수 있는 기술이 필요합니다.
+기존 감성 분석 모델은 6개 감정(기쁨, 당황, 분노, 불안, 상처, 슬픔)을 동등하게 분류하지만, 임상 심리학 관점에서는 일부 감정이 우울증의 핵심 신호입니다. 특히 청소년 상담 현장에서는 "짜증"과 "좌절감", "화남"과 "무력감"을 구분하여 실제 위험이 있는 청소년을 조기에 발견하는 것이 중요합니다.
 
 ### 프로젝트 목표
 
-- ✅ **우울 신호 특화 탐지**: 일상적 부정 감정과 우울 신호 구분
-- ✅ **멀티모달 융합**: 텍스트의 의미 정보와 음성의 비언어적 특징(운율, 톤) 결합
-- ✅ **도메인 지식 활용**: PHQ-9(우울증 선별검사) 기반 특징으로 탐지 민감도 향상
-- ✅ **서비스화**: 웹 기반 실시간 진단 인터페이스 구축
+- **우울 신호 탐지율(Recall) 극대화**: False Negative를 최소화하여 실제 위험군을 놓치지 않는 시스템 구축
+- **우울 신호 그룹화**: 불안/상처/슬픔을 "우울 신호"로 재분류
+- **전체 문맥 활용**: 3턴 대화 전체를 입력으로 사용
+- **PHQ-9 통합**: 우울증 선별검사 기준을 특징으로 추가
+- **멀티모달 융합**: 텍스트 의미 + 음성 운율 결합
+
+### 프로젝트 정보
+
+| 항목 | 내용 |
+|------|------|
+| **기간** | 2024.10 - 2024.11 |
+| **배포 URL** | http://43.201.10.85:8501 |
+| **실험 구성** | 3 Phases, 14개 체계적 비교 실험 |
 
 ---
 
 ## 🌟 주요 특징
 
-### 1. 우울 신호 정의 및 라벨링 전략
+### 1. 체계적인 3단계 실험 설계
 
-#### 우울 신호 그룹화
+각 Phase마다 단 하나의 변수만 변경하여 그 효과를 명확히 측정했습니다.
 
-본 연구에서는 AI Hub 감성 대화 말뭉치의 **6개 감정 대분류** 중 **불안(3), 상처(4), 슬픔(5)**을 "우울 신호"로 그룹화하여 탐지합니다.
+| Phase | 목표 | 실험 수 | 핵심 결과 |
+|-------|------|---------|----------|
+| **Phase 1** | 라벨링 & 문맥 비교 | 8개 | 6-class + 전체 문맥 + Fine-tuning 선정 |
+| **Phase 2** | PHQ-9 효과 검증 | 4개 | Recall +1.17%p 향상 |
+| **Phase 3** | 멀티모달 융합 | 2개 | 성능 하락 → 원인 분석 |
 
-| 라벨 | 대분류 | 주요 소분류 감정 |
-|------|--------|-----------------|
-| **0: 기쁨** | 긍정 | 감사, 신뢰, 편안, 만족, 흥분 |
-| **1: 당황** | 중립/혼란 | 고립된(당황), 외로운, 열등감, 부끄러운 |
-| **2: 분노** | 일반 부정 | 툴툴대는, 짜증내는, 노여워하는, 성가신 |
-| **3: 불안** | ⚠️ 우울 신호 | 두려운, 스트레스받는, 취약한, 걱정스러운, 조심스러운 |
-| **4: 상처** | ⚠️ 우울 신호 | 고립된, 배신당한, 버려진, 충격받은, 괴로워하는 |
-| **5: 슬픔** | ⚠️ 우울 신호 | 우울한, 좌절한, 비통한, 염세적인, 낙담한, 환멸 |
+**재현 가능성 보장**: 모든 실험에서 Random Seed(42) 고정, Train/Test 비율(80:20) 유지
 
-#### 그룹화 근거
+### 2. 우울 신호 정의 및 라벨링 전략
 
-**1. 우울증 문헌 검토**
-- **불안**: 주요 우울증 환자의 약 50%가 불안 증상을 동반. DSM-5에서도 우울 진단 시 ' 불안한 고통 동반'를 명시
-- **상처** (고립감, 외로움): PHQ-9 척도에 "자신이 실패자 같다", "죄책감" 등의 문항 포함. 사회적 고립은 지속성 우울장애의 핵심 요인[2]
-- **슬픔**: PHQ-9 1~2번 항목과 직접 일치
+AI Hub 감성 대화 말뭉치의 6개 감정 대분류 중 불안(3), 상처(4), 슬픔(5)을 "우울 신호"로 그룹화
 
-
-**3. 실험적 검증**
-- 이 그룹화로 우울 신호 탐지율(Recall) **83.46%** 달성
-- False Negative 283건으로 감소 (전체 1,711건 중 16.5%)
-
-#### 왜 기쁨/당황/분노는 제외했나?
-
-- **기쁨(0)**: 명백한 긍정 감정
-- **당황(1)**: 일시적 혼란 상태 (우울과 직접 연관 낮음)
-- **분노(2)**: 외부로 표출되는 감정 (우울의 내재화 특성과 구분됨)
-
----
-
-### 2. 4개 커스텀 라벨 실험 (Ablation Study)
-
-#### 실험 동기
-
-초기 실험에서 6개 감정 대분류를 **임상적 위험도 기준**으로 4개 라벨로 재구성을 시도했습니다.
-
-| 라벨 | 설명 | 매핑 감정 |
-|------|------|-----------|
-| **우울 신호** | 위험 신호 | 우울한, 좌절한, 비통한, 고립된, 외로운 등 |
-| **긍정** | 긍정 감정 | 기쁨 대분류 전체 |
-| **일반 부정** | 일상 부정 | 짜증, 분노, 질투 등 |
-| **중립** | 모호한 감정 | 방어적인, 시선 의식하는 등 |
-
-**가설**: "위험/안전" 기준으로 재분류하면 우울 탐지가 더 정확할 것
-
-#### 실험 결과
-
-| 접근법 | Accuracy | Depression Recall | Depression F1 | 선택 |
-|--------|----------|-------------------|---------------|------|
-| **4-class** | 72.88% | 73.62% | 65.14% | ❌ |
-| **6-class** | 69.07% | **82.29%** | **82.92%** | ✅ |
-
-**결론**: 6개 대분류가 더 우수! 
-
-
-**최종 전략**: 
-- ✅ **학습 시**: 6개 대분류 그대로 사용 (정보 보존)
-- ✅ **평가 시**: Post-hoc으로 불안/상처/슬픔을 '우울 신호'로 그룹화
-
-```python
-# 평가 코드 예시
-six_label_depression_classes = [3, 4, 5]  # 불안, 상처, 슬픔
-y_true_binary = np.isin(all_labels, depression_classes).astype(int)
-depression_recall = recall_score(y_true_binary, y_pred_binary)
-```
-
----
+| 라벨 | 대분류 | 주요 소분류 감정 | 분류 |
+|------|--------|-----------------|------|
+| 0 | 기쁨 | 감사, 신뢰, 편안, 만족, 흥분 | 비우울 |
+| 1 | 당황 | 고립된(당황), 외로운, 열등감, 부끄러운 | 비우울 |
+| 2 | 분노 | 툴툴대는, 짜증내는, 노여워하는, 성가신 | 비우울 |
+| 3 | 불안 | 두려운, 스트레스받는, 취약한, 걱정스러운 | ⚠️ 우울 신호 |
+| 4 | 상처 | 고립된, 배신당한, 버려진, 충격받은, 괴로워하는 | ⚠️ 우울 신호 |
+| 5 | 슬픔 | 우울한, 좌절한, 비통한, 염세적인, 낙담한 | ⚠️ 우울 신호 |
 
 ### 3. PHQ-9 도메인 지식 주입
 
-#### PHQ-9란?
+**PHQ-9**: DSM-5의 주요 우울증 진단 기준 9가지를 반영한 자가보고식 선별 검사지
 
-**PHQ-9 (Patient Health Questionnaire-9)**는 우울증을 선별하고 심각도를 평가하는 가장 널리 사용되는 자가보고식 설문지입니다.
+**방법론**: PHQ-9 키워드 벡터와 입력 텍스트 벡터 간의 코사인 유사도 계산
 
-**핵심 특징**:
-- **9개 문항**: DSM-5의 주요 우울증 진단 기준 9가지를 직접 반영
-- **평가 기간**: 최근 2주간의 증상 빈도 측정
-- **점수 범위**: 0~27점 (각 문항 0~3점)
-  - 0~4점: 우울 증상 최소
-  - 5~9점: 경미한 우울
-  - 10~14점: 중등도 우울
-  - 15~19점: 중등도-심한 우울
-  - 20~27점: 심한 우울
-
-**PHQ-9의 9가지 증상**:
-1. 기분 저하, 우울감, 절망감
-2. 흥미나 즐거움 상실
-3. 수면 문제 (불면 또는 과다수면)
-4. 피로감, 기력 저하
-5. 식욕 변화 (감소 또는 증가)
-6. 자기 비하, 실패감, 죄책감
-7. 집중력 저하
-8. 느려진 말과 행동 또는 안절부절못함
-9. **자살이나 자해 생각** (가장 심각한 증상)
-
-#### 본 연구에서의 PHQ-9 활용
-
-**의미 유사도 기반 특징 추출**:
 ```python
-# PHQ-9 증상 키워드 벡터와 텍스트 벡터 간 코사인 유사도 계산
-similarity_score = cosine_similarity(text_embedding, phq9_embedding)
+similarity = cosine_similarity(text_emb, phq9_emb)
+
+# 3단계 가중치 적용
+Direct Core (x3.0): 자살/자해 직접 표현
+Core List (x2.0): 우울/무기력/집중력 저하
+Indirect List (x1.0): 수면/식욕 변화
 ```
 
-**PHQ-9 증상 분류**:
-- **Direct Core** (가중치 3.0): 자살/자해 관련 직접적 표현
-- **Core List** (가중치 2.0): 우울, 무기력, 집중력 저하 등 핵심 증상
-- **Indirect List** (가중치 1.0): 수면/식욕 변화, 불안 등 간접 증상
-
----
-
-**활용 효과**:
-- ✅ 우울 신호 탐지율(Recall) 향상: 82.29% → **83.46%** (+1.17%p)
-- ✅ False Negative 감소: 303건 → **283건** (-20건, 6.6% 개선)
-- ✅ 특히 자살/자해 관련 표현 탐지에 효과적
-
----
-
+**중요한 실험적 발견**: 키워드 매칭은 오히려 노이즈가 되었습니다. 최종적으로 '유사도'만 사용한 모델이 더 높은 성능을 보여 도메인 지식의 '맥락적' 적용이 중요함을 확인했습니다.
 
 ### 4. 멀티모달 융합 아키텍처
 
 ```
-📝 텍스트 브랜치              🎤 음성 브랜치
-   ↓                            ↓
-KLUE-RoBERTa                  MFCC 추출
-   ↓                            ↓
-[CLS] Token (768dim)          LSTM (128dim)
-   ↓                            ↓
-PHQ-9 Feature (16dim)              ↓
-   ↓                            ↓
-   └────── Concatenation ───────┘
-                ↓
-          Classifier (6 classes)
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│    PHQ-9        │     │   Text Input    │     │   Audio Input   │
+│ (similarity)    │     │                 │     │  (MFCC 30-dim)  │
+└────────┬────────┘     └────────┬────────┘     └────────┬────────┘
+         │                       │                       │
+         ▼                       ▼                       ▼
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│  Linear Layer   │     │  KLUE RoBERTa   │     │      LSTM       │
+│  1-dim → 16-dim │     │ (Partial Fine-  │     │ Hidden: 128     │
+│     + ReLU      │     │  tuning Top 3)  │     │ Layers: 2       │
+└────────┬────────┘     └────────┬────────┘     └────────┬────────┘
+         │                       │                       │
+         │                       ▼                       ▼
+         │              ┌─────────────────┐     ┌─────────────────┐
+         │              │ CLS Token Pool  │     │ Adaptive Pool   │
+         │              │    (768-dim)    │     │   (128-dim)     │
+         │              └────────┬────────┘     └────────┬────────┘
+         │                       │                       │
+         └───────────┬───────────┘                       │
+                     ▼                                   │
+            ┌─────────────────┐                          │
+            │   Concatenate   │                          │
+            │ CLS(768)+PHQ(16)│                          │
+            └────────┬────────┘                          │
+                     ▼                                   ▼
+            ┌─────────────────┐                 ┌─────────────────┐
+            │ Text Classifier │                 │Audio Classifier │
+            │ Linear(784→6)   │                 │ Linear(128→6)   │
+            └────────┬────────┘                 └────────┬────────┘
+                     │                                   │
+                     └─────────────┬─────────────────────┘
+                                   ▼
+                          ┌─────────────────┐
+                          │   Late Fusion   │
+                          │ (Text + Audio)/2│
+                          └─────────────────┘
 ```
 
 ---
@@ -189,18 +147,21 @@ PHQ-9 Feature (16dim)              ↓
 ┌─────────────────────────────────────────────────────────┐
 │                    사용자 인터페이스                       │
 │                   (Streamlit Web App)                    │
+│                      Port: 8501                          │
 └─────────────────────┬───────────────────────────────────┘
-                      │
+                      │ HTTP Request
               ┌───────▼───────┐
               │   FastAPI     │
               │  REST API     │
+              │   Port: 8000  │
               └───────┬───────┘
                       │
       ┌───────────────┼───────────────┐
       ▼               ▼               ▼
 ┌─────────┐   ┌─────────────┐   ┌──────────┐
 │  Text   │   │   PHQ-9     │   │  Audio   │
-│Processor│   │   Feature   │   │ Processor│
+│Processor│   │  Similarity │   │ Processor│
+│(RoBERTa)│   │   Feature   │   │  (MFCC)  │
 └────┬────┘   └──────┬──────┘   └────┬─────┘
      │               │               │
      └───────────────┼───────────────┘
@@ -223,176 +184,162 @@ PHQ-9 Feature (16dim)              ↓
 ### 텍스트 데이터
 - **출처**: AI Hub 감성 대화 말뭉치 (청소년 필터링)
 - **규모**: 10,582건
-- **구성**: 발화 텍스트 (3개 턴 대화)
-- **전처리**:
-  - 비언어적 요소 및 특수문자 제거
-  - KLUE-RoBERTa Tokenizer 활용
-  - Max Length: 71 tokens (90% percentile)
+- **구성**: 발화 텍스트 (3개 턴 대화 연결)
+- **Tokenizer**: KLUE/RoBERTa-base
+- **Max Length**: 71 tokens (90% Percentile 기준)
 
 ### 음성 데이터
-- **규모**: 2,876건 (멀티모달)
-- **형식**: WAV/MP3
+- **규모**: 2,876건 (멀티모달 학습용)
+- **형식**: MP3
 - **전처리**:
-  ```python
-  - Sampling Rate: 16,000Hz
+  - Sample Rate: 16,000Hz
   - MFCC: 30 coefficients
-  - 무음 구간 제거 (Trim, top_db=20)
-  - RMS 기반 볼륨 정규화 (target_rms=0.05)
-  - Max Time Steps: 8,144 frames (90% percentile)
-  ```
+  - Trim Silence: top_db=20
+  - RMS 정규화: target_rms=0.05
 
-### 클래스 분포
+### 클래스 분포 (총 10,582건)
 
-**6개 대분류**:
 ```
 불안: 1,998건 | 슬픔: 1,887건 | 당황: 1,844건
 상처: 1,818건 | 분노: 1,792건 | 기쁨: 1,243건
-```
 
-**우울 신호 그룹화 후**:
-```
-우울 신호 (불안+상처+슬픔): 5,703건
-비우울 신호 (기쁨+당황+분노): 4,879건
+→ 우울 신호 (불안+상처+슬픔): 5,703건 (53.9%)
+→ 비우울 신호 (기쁨+당황+분노): 4,879건 (46.1%)
 ```
 
 ---
 
 ## 📈 실험 결과
 
-### Phase 1: 라벨링 및 문맥 비교 (8개 모델)
+### Phase 1: 라벨링 & 문맥 비교 (8개 모델)
 
-**목표**: 최적의 라벨링 시스템 및 입력 전략 선정
+| Task | Text | Label | Model | Accuracy | Depression Recall |
+|------|------|-------|-------|----------|-------------------|
+| six_label_all_text | all | 6-class | MLP | 49.32% | 48.45% |
+| **six_label_all_text** | **all** | **6-class** | **Fine-tuning** | **69.07%** | **82.29%** |
+| four_label_all_text | all | 4-class | MLP | 63.56% | 32.92% |
+| four_label_all_text | all | 4-class | Fine-tuning | 72.88% | 73.62% |
 
-| 모델 | 텍스트 | 라벨 | Accuracy | Depression Recall | Depression F1 |
-|------|--------|------|----------|-------------------|---------------|
-| MLP | All | 6-class | 0.4932 | 0.4845 | 0.6064 |
-| **Fine-tuning** | **All** | **6-class** | **0.6907** | **0.8229** | **0.8292** |
-| MLP | All | 4-class | 0.6356 | 0.3292 | 0.4125 |
-| Fine-tuning | All | 4-class | 0.7288 | 0.7362 | 0.6514 |
-
-**🔍 핵심 발견**:
-- ✅ **전체 문장(All)** > 첫 문장(First): 문맥 정보가 중요
-- ✅ **Fine-tuning** > MLP: RoBERTa 전체 파라미터 활용이 효과적
-- ✅ **6-class > 4-class**: 감정 세분화가 정보 보존에 유리
-  - **특히 Depression Recall**: 82.29% vs 73.62% (8.67%p 차이)
-  - 원인: 짜증 vs 좌절감 같은 미묘한 차이가 우울 탐지 단서
+**핵심 발견**:
+1. **6-class 우수**: "짜증" vs "좌절감" 같은 미묘한 차이가 중요 단서
+2. **전체 문맥 필수**: 대화 흐름 파악으로 첫 문장 대비 Recall 1.17%p 상승
+3. **Fine-tuning 압도적**: MLP 방식(48.45%) 대비 33.84%p 높은 성능
 
 ---
 
-### Phase 2: PHQ-9 가중치 효과 (4개 모델)
+### Phase 2: PHQ-9 효과 검증 (4개 모델)
 
-**목표**: 도메인 지식 주입의 유효성 검증
+| Task | PHQ-9 | Accuracy | Depression Recall | False Negatives |
+|------|-------|----------|-------------------|-----------------|
+| Baseline (PHQ-9 없음) | ❌ | 69.07% | 82.29% | 303건 (17.7%) |
+| **6-class + PHQ-9** | **✅** | **69.23%** | **83.46%** | **283건 (16.5%)** |
 
-| 모델 | PHQ-9 | Accuracy | Depression Precision | Depression Recall | Depression F1 |
-|------|-------|----------|----------------------|-------------------|---------------|
-| 6-class (Baseline) | ❌ | 0.6907 | 0.8356 | 0.8229 | 0.8292 |
-| **6-class + PHQ-9** | **✅** | **0.6923** | **0.8317** | **0.8346** | **0.8331** |
-| 4-class (Baseline) | ❌ | 0.7288 | 0.5840 | 0.7362 | 0.6514 |
-| 4-class + PHQ-9 | ✅ | 0.7276 | 0.5932 | 0.7040 | 0.6439 |
-
-**🔍 핵심 발견**:
-- ✅ **Recall 향상**: False Negative 감소 (303건 → 283건 in 6-class)
-- ✅ **Precision 유지**: 민감도 개선
-- ⚠️ **4-class에서는 효과 미미**: 이미 충분한 특징 학습
+**핵심 인사이트**:
+1. **도메인 지식 효과**: 임상 심리학 진단 기준 주입으로 유의미한 성능 향상
+2. **고효율**: 추가 데이터 학습 없이 유사도 특징(1차원)만으로 우울 신호 20건 추가 탐지
+3. **자살/자해 탐지**: 임상적으로 중요한 고위험 표현 탐지 강화에 기여
 
 ---
 
 ### Phase 3: 멀티모달 융합 (2개 모델)
 
-**목표**: 텍스트 + 음성 시너지 효과 검증
+| Task | Modality | Accuracy | Depression Precision | Depression Recall |
+|------|----------|----------|----------------------|-------------------|
+| **텍스트 단독 (Best)** | 📝 | **71.15%** | 94.59% | **90.16%** |
+| 멀티모달 융합 | 📝+🎤 | 64.66% | **97.42%** | 82.66% |
 
-| 모델 | Modality | Accuracy | Depression Precision | Depression Recall | Depression F1 |
-|------|----------|----------|----------------------|-------------------|---------------|
-| Text Only | 📝 | 0.7115 | 0.9459 | 0.9016 | 0.9232 |
-| **Multimodal** | **📝+🎤** | **0.6466** | **0.9742** | **0.8266** | **0.8943** |
+**⚠️ 성능 하락**: Recall -7.5%p, False Negative +48건 증가
 
-**🔍 핵심 발견**:
-- ⚠️ **Accuracy 하락**: 음성 모델의 학습 데이터 부족 및 텍스트 모델과의 학습 불균형
-- ✅ **Precision 향상**: 0.9459 → **0.9742** (False Positive 대폭 감소, 오탐 최소화)
-- ⚠️ **Recall 하락**: 0.9016 → 0.8266 (텍스트 단독 모델이 더 민감)
+**성능 하락 원인 분석**:
 
-**💡 배포 결정**:
-- **최종 배포 모델**: Multimodal (텍스트 + 음성)
-  - **이유 1**: Precision 97.42%로 **오탐 최소화** (실제 우울 아닌 사람을 우울로 판단하는 것 방지)
-  - **이유 2**: 음성의 비언어적 정보(운율, 톤, 말의 속도)는 텍스트만으로 포착할 수 없는 우울 신호
-  - **이유 3**: 향후 음성 모델 개선으로 성능 향상 여지 존재
+1. **모달리티 간 성능 불균형 (핵심 원인)**
+   - 텍스트 모델(사전학습+Fine-tuning)은 고성능
+   - 음성 모델(LSTM)은 상대적 저성능
+   - 융합 시 저성능 음성 모델이 텍스트 모델의 판단력을 희석
+
+2. **컴퓨팅 리소스 제약**
+   - Colab 무료버전 한계로 Wav2Vec 2.0 같은 고성능 음성 모델 실험 불가
+
+3. **음성 데이터 품질 문제**
+   - 연기된 데이터셋 특성상 실제 우울 환자의 미묘한 운율적 특징 부족
 
 ---
 
 ### 최종 성능 요약
 
 ```
-✨ 최종 배포 모델: Multimodal (Text + Audio + PHQ-9) + 6-class Fine-tuning
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✨ 최종 배포 모델: Multimodal (Text + Audio + PHQ-9) + 6-class
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📊 Overall Accuracy:          64.66%
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🎯 우울 신호 탐지 성능 (불안+상처+슬픔):
    - Precision:  97.42%  (False Positive 최소화) ⭐
-   - Recall:     82.66%  (실제 위험군 놓치지 않음)
-   - F1-Score:   89.43%  (높은 정밀도)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   - Recall:     82.66%  (실제 위험군 포착)
+   - F1-Score:   89.43%
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ⚠️ False Negative: 111/640건 (17.3%)
 ✅ True Positive:  529/640건 (82.7%)
 ```
 
-**💡 배포 전략**:
-- **최종 배포**: Multimodal (텍스트 + 음성 융합)
-  - Precision 97.42%로 **오탐지 최소화** (정밀도 우선)
-  - 음성 정보로 비언어적 우울 신호 포착
-- **실험 최고 성능**: Text Only (Recall 90.16%)
-  - 안정성과 민감도가 높지만,  현재의 성능 차이는 아키텍처 고도화(Fusion 방식 개선, 모델 변경 등)를 통해 충분히 극복 가능하며, 향후 감정 인식의 상한선이 훨씬 높은 멀티모달 방식을 최종 채택
+**배포 결정 이유**: 현재는 텍스트 단독 모델(71.15%)이 우세하나, 운율·톤·발화 속도 등 음성의 비언어적 정보 활용을 위해 멀티모달 모델을 배포. 음성 특징 추출 기법 개선 시 성능 향상 가능성이 높음.
 
 ---
 
 ## 🚀 설치 및 실행
 
-### 1. 환경 설정
+### 방법 1: Docker Compose (권장)
 
 ```bash
 # 레포지토리 클론
-git clone https://github.com/yourusername/adolescent-depression-detection.git
-cd adolescent-depression-detection
+git clone https://github.com/TaehyukRyu/depression-detection.git
+cd depression-detection
 
+# 모델 파일 다운로드 (용량 문제로 별도 제공)
+# models/ 폴더에 phase3_six_label_all_text_phq9_multimodal.pt 배치
+
+# Docker Compose 실행
+docker-compose up --build
+```
+
+실행 후 접속:
+- **Frontend (Streamlit)**: http://localhost:8501
+- **Backend (FastAPI)**: http://localhost:8000
+
+### 방법 2: 로컬 실행
+
+```bash
 # 가상환경 생성
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 
-# 의존성 설치
+# 백엔드 의존성 설치 및 실행
+cd src/backend
 pip install -r requirements.txt
+uvicorn main:app --host 0.0.0.0 --port 8000
+
+# 새 터미널에서 프론트엔드 실행
+cd src/frontend
+pip install -r requirements.txt
+streamlit run app.py
 ```
 
-### 2. 데이터 준비
-
-```bash
-# AI Hub에서 감성 대화 말뭉치 다운로드 후
-mkdir data
-# data/ 폴더에 배치
-```
-
-### 3. 모델 학습
-
-```bash
-# Phase 1: 라벨링 비교
-python train_phase1.py --label_type 6class --text_type all
-
-# Phase 2: PHQ-9 효과 검증
-python train_phase2.py --use_phq9 True
-
-# Phase 3: 멀티모달
-python train_phase3.py --use_audio True
-```
-
-### 4. 추론
+### 추론 예시 (Python)
 
 ```python
-from model import DepressionDetector
+from inference import DepressionDetector
 
-detector = DepressionDetector()
-text = "요즘 아무것도 하기 싫고 자꾸 죽고 싶다는 생각이 들어"
-result = detector.predict(text)
+detector = DepressionDetector(
+    model_path='models/phase3_six_label_all_text_phq9_multimodal.pt'
+)
 
-print(f"우울 신호 확률: {result['depression_prob']:.2%}")
-print(f"권장 조치: {result['recommendation']}")
+result = detector.predict(
+    text="요즘 아무것도 하기 싫고 자꾸 힘든 생각이 들어",
+    audio_path="sample.wav"
+)
+
+print(f"예측 감정: {result['label']}")
+print(f"우울 신호 여부: {result['is_depression']}")
+print(f"신뢰도: {result['confidence']:.2%}")
 ```
 
 ---
@@ -403,128 +350,102 @@ print(f"권장 조치: {result['recommendation']}")
 
 | 기술 | 용도 | 버전 |
 |------|------|------|
-| **PyTorch** | 딥러닝 프레임워크 | 2.0.1 |
-| **Transformers** | KLUE-RoBERTa 모델 | 4.30.0 |
-| **Librosa** | 음성 특징 추출 (MFCC) | 0.10.0 |
-| **scikit-learn** | 데이터 전처리 및 평가 | 1.3.0 |
-| **sentence-transformers** | PHQ-9 임베딩 | 2.2.2 |
+| PyTorch | 딥러닝 프레임워크 | 2.0+ |
+| Transformers | KLUE-RoBERTa 모델 | 4.30+ |
+| Librosa | 음성 특징 추출 (MFCC) | 0.10.0 |
+| scikit-learn | 데이터 전처리 및 평가 | - |
+| SpeechRecognition | 음성-텍스트 변환 (STT) | - |
 
-### Backend/Ops
+### Backend/Deployment
 
 | 기술 | 용도 |
 |------|------|
-| **FastAPI** | REST API 서버 |
-| **Docker** | 컨테이너화 |
-| **AWS EC2/S3** | 클라우드 배포 |
+| FastAPI | REST API 서버 |
+| Docker | 컨테이너화 |
+| Docker Compose | 멀티 컨테이너 오케스트레이션 |
+| AWS EC2 | 클라우드 배포 |
 
 ### Frontend
 
 | 기술 | 용도 |
 |------|------|
-| **Streamlit** | 웹 인터페이스 |
+| Streamlit | 웹 인터페이스 |
+| Plotly | 데이터 시각화 |
 
 ---
 
 ## 📁 프로젝트 구조
 
 ```
-adolescent-depression-detection/
+depression-detection/
 │
-├── docs/                                    # 문서 및 연구 자료
-│   ├── 018.감성대화_데이터_구축_가이드라인.pdf
-│   ├── 06_[자연어]영역 감성 대화 말뭉치.pdf
-│   ├── AI-Hub_데이터참고.pdf
-│   ├── Phase 1_ 라벨 & 문맥 & 모델 비교 (8개).pdf
-│   ├── Phase 2_ PHQ-9 가중치 효과 (4개).pdf
-│   ├── Phase 3_멀티모달 (2개)_최종.pdf
-│   └── 프로젝트_계획서.docx
+├── docs/                                    # 📚 문서 및 연구 자료
+│   ├── 018_감성대화_데이터_구축_가이드라인.pdf
+│   ├── 06_[자연어영역]_감성_대화_말뭉치.pdf
+│   ├── AI_Hub_데이터참고.pdf
+│   ├── Phase_1_라벨_문맥_모델_비교.pdf
+│   ├── Phase_2_PHQ9_가중치_효과.pdf
+│   ├── Phase_3_멀티모달_최종.pdf
+│   ├── 음성데이터_전처리.pdf
+│   └── 청소년_우울_신호_탐지_시스템_포트폴리오.pdf
 │
-├── models/                                  # 학습된 모델 파일
-│   └── models_README.md                     # 모델 설명 문서 
+├── models/                                  # 🤖 학습된 모델 파일
+│   └── README.md                            # 모델 다운로드 안내
 │
-├── notebooks/                               # 실험 Jupyter 노트북
-│   ├── Phase 1_ 라벨 & 문맥 & 모델 비교 (8개).ipynb
-│   ├── Phase 2_ PHQ-9 가중치 효과 (4개).ipynb
-│   ├── Phase 3_멀티모달 (2개)_최종.ipynb
-│   └── 음성데이터_전처리.ipynb
+├── notebooks/                               # 📓 실험 Jupyter 노트북
+│   ├── Phase_1_라벨_문맥_모델_비교.ipynb
+│   ├── Phase_2_PHQ9_가중치_효과.ipynb
+│   └── Phase_3_멀티모달_최종.ipynb
 │
-├── results/                                 # 실험 결과 CSV
-│   ├── phase1_total_result.csv
-│   ├── phase2_total_result.csv
-│   └── phase3_total_result.csv
+├── results/                                 # 📊 실험 결과 CSV
+│   ├── phase1_total_result.csv              # 8개 모델 비교
+│   ├── phase2_total_result.csv              # PHQ-9 효과 비교
+│   └── phase3_total_result.csv              # 멀티모달 비교
 │
-├── src/                                     # 소스 코드
-│   ├── SRC_README.md                        # 소스 코드 설명
-│   ├── inference.py                         # 추론 스크립트
-│   ├── model.py                             # 모델 정의
-│   ├── preprocessing.py                     # 데이터 전처리
-│   └── requirements.txt                     # 의존성 패키지
+├── src/                                     # 💻 소스 코드
+│   ├── backend/                             # FastAPI 백엔드
+│   │   ├── Dockerfile
+│   │   ├── main.py                          # API 엔드포인트
+│   │   ├── model.py                         # 모델 아키텍처
+│   │   ├── inference.py                     # 추론 로직
+│   │   ├── preprocessing.py                 # 전처리 함수
+│   │   └── requirements.txt
+│   │
+│   └── frontend/                            # Streamlit 프론트엔드
+│       ├── Dockerfile
+│       ├── app.py                           # 웹 인터페이스
+│       └── requirements.txt
 │
-└── README.md                                # 프로젝트 메인 문서
+├── docker-compose.yml                       # 🐳 Docker 설정
+├── .gitignore
+└── README.md                                # 📖 프로젝트 문서
 ```
 
-**주요 디렉토리 설명**:
-- **docs/**: 데이터셋 가이드라인, 실험 결과 PDF, 프로젝트 계획서
-- **models/**: 학습된 PyTorch 모델
-- **notebooks/**: 3단계 실험 과정 재현 가능한 주피터 노트북
-- **results/**: 각 Phase별 성능 지표가 담긴 CSV 파일
-- **src/**: 배포용 핵심 코드 (모델 로딩, 추론, 전처리)
-
 ---
-
-
-
 
 ## 📌 제한사항 및 향후 과제
 
-### 현재 제한사항
+### 실패에서 배운 점
 
-**1. 멀티모달 성능 불균형 문제** ⚠️
-- **텍스트 모델**: KLUE-RoBERTa 전체 파라미터 Fine-tuning 수행
-- **음성 모델**: 2,876건으로 LSTM 기반 학습 (파인튜닝 미수행)
-- **문제**: 
-  - 텍스트와 음성의 학습 규모 차이
-  - 텍스트는 사전학습 모델 활용, 음성은 LSTM 학습
-  - 두 모달리티의 특징을 평균/결합하면서 고성능 텍스트 모델이 저성능 음성 모델에 의해 희석됨
-- **결과**: 멀티모달 Accuracy 64.66% (Text Only 71.15% 대비 6.49%p 하락)
+> 멀티모달이 항상 정답은 아님을 배웠습니다. 모달리티 간 성능 불균형이 발생할 수 있으며, 특히 각 데이터마다 전처리 및 특성 공학 난이도가 다름을 확인했습니다. **각 모달리티의 개별 성능 뒷받침이 필수적입니다.**
 
-**2. 컴퓨팅 리소스 제약** ⚠️
-- **GPU 부족**: Google Colab 무료 버전의 제한된 GPU 사용 시간
-  - 멀티모달 전체 학습 불가 (메모리 부족으로 배치 사이즈 축소)
-  - 음성 사전학습 모델(Wav2Vec 2.0 등) 실험 불가
-  - 하이퍼파라미터 튜닝 횟수 제한
-- **영향**: 최적 성능 미달성, 실험 반복 어려움
+### 핵심 교훈
 
-**3. 데이터 편향**
-- 특정 상황(학업 스트레스, 가족 갈등)에 편중된 대화 데이터
-- 청소년 외 연령층 적용 시 재학습 필요
-
-**4. 음성 데이터 품질**
-- 현상: 실제 상담 데이터가 아닌 정제된 낭독/연기 데이터를 사용하여 감정의 깊이가 얕음.
-- 문제점: 우울감을 판단하는 핵심 요소인 '운율(Intonation)', '강세(Stress)', '발화 속도 변화' 등의 음향적 특징이 뚜렷하지 않아 모델 학습에 난항.
-
----
+1. **모달리티 균형**: 각 모달리티가 비슷한 수준의 성능을 가져야 시너지 발생
+2. **사전학습 모델의 중요성**: 음성에서도 Wav2Vec 같은 사전학습 모델 도입이 성능 확보에 필수
+3. **리소스 확보**: 멀티모달은 단일 모델보다 훨씬 많은 GPU 자원을 요구
 
 ### 향후 개선 방향
 
-**1. 멀티모달 성능 개선** 🎯 (최우선)
-- **음성 모델 고도화**:
-  - Wav2Vec 2.0, HuBERT 등 음성 사전학습 모델 Fine-tuning
+- ✅ 음성 사전학습 모델 도입 (HuBERT, Wav2Vec 2.0 등)
+- ✅ Late Fusion 대신 Cross-modal Attention 적용
+- ✅ Colab Pro 또는 클라우드 GPU 환경 확보
+- ✅ 실제 상담 음성 데이터 확보 (Quality 개선)
 
-- **균형 잡힌 융합 전략**:
-  - 후기 융합 대신 중기 융합 실험
-  - 텍스트와 음성의 Cross-modal attention
+### 실무 적용 가능성
 
-**2. 컴퓨팅 리소스 확보**
-- **GPU 환경 개선**:
-  - Google Colab Pro 또는 AWS/GCP GPU 인스턴스 활용
-  - 모델 경량화 (LoRA, Adapter 기법)
-  - Mixed Precision Training (FP16) 활용
-
-**3. 실시간 모니터링 시스템**
-- 장기 대화 추적을 통한 우울 경향 변화 감지
-- 개인화된 베이스라인 설정 및 이상 탐지
-- 시계열 분석 기법 적용
+- 학교/청소년 상담센터의 초기 선별 도구로 활용 가능
+- 위험 신호를 놓치지 않는 보조 도구(Assistant) 역할 수행
 
 ---
 
@@ -532,8 +453,16 @@ adolescent-depression-detection/
 
 프로젝트 관련 문의사항은 아래로 연락 주시기 바랍니다:
 
-- 📧 Email: xogur1578@gmail.com
-- 🐙 배포 link: [링크]
+| | |
+|---|---|
+| 📧 **Email** | xogur1578@gmail.com |
+| 🐙 **GitHub** | [github.com/TaehyukRyu/depression-detection](https://github.com/TaehyukRyu/depression-detection) |
+| 🚀 **Live Demo** | http://43.201.10.85:8501 |
 
 ---
 
+<div align="center">
+
+**마지막 업데이트**: 2024.11
+
+</div>
