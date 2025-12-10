@@ -136,8 +136,7 @@ Indirect List (x1.0): 수면/식욕 변화
                           │   Late Fusion   │
                           │ (Text + Audio)/2│
                           └─────────────────┘
----
-
+```
 
 ---
 
