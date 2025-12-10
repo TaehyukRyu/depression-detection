@@ -315,7 +315,6 @@ print(f"신뢰도: {result['confidence']:.2%}")
 | Transformers | KLUE-RoBERTa 모델 | 4.30+ |
 | Librosa | 음성 특징 추출 (MFCC) | 0.10.0 |
 | scikit-learn | 데이터 전처리 및 평가 | - |
-| SpeechRecognition | 음성-텍스트 변환 (STT) | - |
 
 ### Backend/Deployment
 
@@ -323,7 +322,6 @@ print(f"신뢰도: {result['confidence']:.2%}")
 |------|------|
 | FastAPI | REST API 서버 |
 | Docker | 컨테이너화 |
-| Docker Compose | 멀티 컨테이너 오케스트레이션 |
 | AWS EC2 | 클라우드 배포 |
 
 ### Frontend
@@ -331,7 +329,6 @@ print(f"신뢰도: {result['confidence']:.2%}")
 | 기술 | 용도 |
 |------|------|
 | Streamlit | 웹 인터페이스 |
-| Plotly | 데이터 시각화 |
 
 ---
 
@@ -348,15 +345,17 @@ depression-detection/
 │   ├── Phase_2_PHQ9_가중치_효과.pdf
 │   ├── Phase_3_멀티모달_최종.pdf
 │   ├── 음성데이터_전처리.pdf
-│   └── 청소년_우울_신호_탐지_시스템_포트폴리오.pdf
+│   ├── 청소년_우울_신호_탐지_시스템_포트폴리오.pdf
+│   └── 프로젝트_계획서.docx
 │
-├── models/                                  # 🤖 학습된 모델 파일
-│   └── README.md                            # 모델 다운로드 안내
+├── models/                                  # 🤖 학습된 모델 파일(대용량 업로드 X)
+│   └── models_README.md                     # 모델 다운로드 안내
 │
 ├── notebooks/                               # 📓 실험 Jupyter 노트북
 │   ├── Phase_1_라벨_문맥_모델_비교.ipynb
 │   ├── Phase_2_PHQ9_가중치_효과.ipynb
-│   └── Phase_3_멀티모달_최종.ipynb
+│   ├── Phase_3_멀티모달_최종.ipynb
+│   └── 음성데이터_전처리.ipynb
 │
 ├── results/                                 # 📊 실험 결과 CSV
 │   ├── phase1_total_result.csv              # 8개 모델 비교
@@ -364,49 +363,77 @@ depression-detection/
 │   └── phase3_total_result.csv              # 멀티모달 비교
 │
 ├── src/                                     # 💻 소스 코드
-│   ├── backend/                             # FastAPI 백엔드
+│   ├── backend/                             # Fast API 백엔드
 │   │   ├── Dockerfile
-│   │   ├── main.py                          # API 엔드포인트
-│   │   ├── model.py                         # 모델 아키텍처
-│   │   ├── inference.py                     # 추론 로직
-│   │   ├── preprocessing.py                 # 전처리 함수
+│   │   ├── main.py                          
+│   │   ├── model.py                         
+│   │   ├── inference.py                     
+│   │   ├── preprocessing.py                 
 │   │   └── requirements.txt
 │   │
 │   └── frontend/                            # Streamlit 프론트엔드
-│       ├── Dockerfile
-│       ├── app.py                           # 웹 인터페이스
-│       └── requirements.txt
+│   │    ├── Dockerfile
+│   │    ├── app.py                           # 웹 인터페이스
+│   │    └── requirements.txt
+│   │
+│   └── docker-compose.yml
 │
-├── docker-compose.yml                       # 🐳 Docker 설정
-├── .gitignore
-└── README.md                                # 📖 프로젝트 문서
+│
+└── README.md                                
 ```
 
 ---
 
 ## 📌 제한사항 및 향후 과제
 
-### 실패에서 배운 점
+### 현재 제한사항
 
-> 멀티모달이 항상 정답은 아님을 배웠습니다. 모달리티 간 성능 불균형이 발생할 수 있으며, 특히 각 데이터마다 전처리 및 특성 공학 난이도가 다름을 확인했습니다. **각 모달리티의 개별 성능 뒷받침이 필수적입니다.**
+**1. 멀티모달 성능 불균형 문제** ⚠️
+- **텍스트 모델**: KLUE-RoBERTa 전체 파라미터 Fine-tuning 수행
+- **음성 모델**: 2,876건으로 LSTM 기반 학습 (파인튜닝 미수행)
+- **문제**: 
+  - 텍스트와 음성의 학습 규모 차이
+  - 텍스트는 사전학습 모델 활용, 음성은 LSTM 학습
+  - 두 모달리티의 특징을 평균/결합하면서 고성능 텍스트 모델이 저성능 음성 모델에 의해 희석됨
+- **결과**: 멀티모달 Accuracy 64.66% (Text Only 71.15% 대비 6.49%p 하락)
 
-### 핵심 교훈
+**2. 컴퓨팅 리소스 제약** ⚠️
+- **GPU 부족**: Google Colab 무료 버전의 제한된 GPU 사용 시간
+  - 멀티모달 전체 학습 불가 (메모리 부족으로 배치 사이즈 축소)
+  - 음성 사전학습 모델(Wav2Vec 2.0 등) 실험 불가
+  - 하이퍼파라미터 튜닝 횟수 제한
+- **영향**: 최적 성능 미달성, 실험 반복 어려움
 
-1. **모달리티 균형**: 각 모달리티가 비슷한 수준의 성능을 가져야 시너지 발생
-2. **사전학습 모델의 중요성**: 음성에서도 Wav2Vec 같은 사전학습 모델 도입이 성능 확보에 필수
-3. **리소스 확보**: 멀티모달은 단일 모델보다 훨씬 많은 GPU 자원을 요구
+**3. 데이터 편향**
+- 특정 상황(학업 스트레스, 가족 갈등)에 편중된 대화 데이터
+- 청소년 외 연령층 적용 시 재학습 필요
+
+**4. 음성 데이터 품질**
+- 현상: 실제 상담 데이터가 아닌 정제된 낭독/연기 데이터를 사용하여 감정의 깊이가 얕음.
+- 문제점: 우울감을 판단하는 핵심 요소인 '운율(Intonation)', '강세(Stress)', '발화 속도 변화' 등의 음향적 특징이 뚜렷하지 않아 모델 학습에 난항.
+
+---
 
 ### 향후 개선 방향
 
-- ✅ 음성 사전학습 모델 도입 (HuBERT, Wav2Vec 2.0 등)
-- ✅ Late Fusion 대신 Cross-modal Attention 적용
-- ✅ Colab Pro 또는 클라우드 GPU 환경 확보
-- ✅ 실제 상담 음성 데이터 확보 (Quality 개선)
+**1. 멀티모달 성능 개선** 🎯 (최우선)
+- **음성 모델 고도화**:
+  - Wav2Vec 2.0, HuBERT 등 음성 사전학습 모델 Fine-tuning
 
-### 실무 적용 가능성
+- **균형 잡힌 융합 전략**:
+  - 후기 융합 대신 중기 융합 실험
+  - 텍스트와 음성의 Cross-modal attention
 
-- 학교/청소년 상담센터의 초기 선별 도구로 활용 가능
-- 위험 신호를 놓치지 않는 보조 도구(Assistant) 역할 수행
+**2. 컴퓨팅 리소스 확보**
+- **GPU 환경 개선**:
+  - Google Colab Pro 또는 AWS/GCP GPU 인스턴스 활용
+  - 모델 경량화 (LoRA, Adapter 기법)
+  - Mixed Precision Training (FP16) 활용
+
+**3. 실시간 모니터링 시스템**
+- 장기 대화 추적을 통한 우울 경향 변화 감지
+- 개인화된 베이스라인 설정 및 이상 탐지
+- 시계열 분석 기법 적용
 
 ---
 
@@ -422,8 +449,3 @@ depression-detection/
 
 ---
 
-<div align="center">
-
-**마지막 업데이트**: 2024.11
-
-</div>
