@@ -10,7 +10,6 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green.svg)](https://fastapi.tiangolo.com/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.28+-orange.svg)](https://streamlit.io/)
 
-[🚀 **Live Demo**](http://43.201.10.85:8501) · [📧 Contact](mailto:xogur1578@gmail.com)
 
 </div>
 
