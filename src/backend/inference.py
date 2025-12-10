@@ -1,8 +1,3 @@
-"""
-추론(Inference) 메인 모듈
-- 텍스트 + 음성 입력을 받아 우울 신호 예측
-"""
-
 import torch
 import numpy as np
 from preprocessing import AudioPreprocessor, TextPreprocessor, preprocess_input
@@ -10,14 +5,10 @@ from model import MultiModalClassifier, load_model
 
 
 class DepressionDetector:
-    """우울증 감지 추론 클래스"""
     
     def __init__(self, model_path, device='cuda'):
-        """
-        Args:
-            model_path: 학습된 모델 .pt 파일 경로
-            device: 'cuda' or 'cpu'
-        """
+ 
+
         self.device = device if torch.cuda.is_available() else 'cpu'
         
         # 레이블 정의
@@ -48,23 +39,7 @@ class DepressionDetector:
         print(f"✅ DepressionDetector 초기화 완료 (device: {self.device})")
     
     def predict(self, text, audio_path):
-        """
-        텍스트 + 음성 입력에 대한 예측 수행
-        
-        Args:
-            text: 입력 텍스트 (str)
-            audio_path: 음성 파일 경로 (str)
-            
-        Returns:
-            dict: {
-                'label': 예측 레이블 (str),
-                'label_id': 레이블 ID (int),
-                'probabilities': 각 클래스별 확률 (dict),
-                'is_depression': 우울 신호 여부 (bool),
-                'depression_prob': 우울 신호 확률 (float),
-                'confidence': 예측 신뢰도 (float)
-            }
-        """
+
         # 1. 전처리
         inputs = preprocess_input(
             text=text,
@@ -112,16 +87,7 @@ class DepressionDetector:
         }
     
     def predict_batch(self, text_list, audio_path_list):
-        """
-        배치 예측 (여러 입력을 한 번에 처리)
-        
-        Args:
-            text_list: 텍스트 리스트
-            audio_path_list: 음성 파일 경로 리스트
-            
-        Returns:
-            list of dict: 각 입력에 대한 예측 결과
-        """
+
         results = []
         
         for text, audio_path in zip(text_list, audio_path_list):
@@ -131,15 +97,7 @@ class DepressionDetector:
         return results
     
     def explain_prediction(self, result):
-        """
-        예측 결과를 사람이 읽기 쉽게 설명
-        
-        Args:
-            result: predict() 함수의 반환값
-            
-        Returns:
-            str: 설명 텍스트
-        """
+
         label = result['label']
         confidence = result['confidence']
         is_depression = result['is_depression']
@@ -174,7 +132,6 @@ class DepressionDetector:
 
 
 def main():
-    """사용 예시"""
     import argparse
     
     parser = argparse.ArgumentParser(description='우울증 조기 감지 추론')

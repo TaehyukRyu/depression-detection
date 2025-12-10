@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  # 1. 백엔드 서비스
+  backend:
+    build: ./backend
+    container_name: depression-backend
+    ports:
+      - "8000:8000"
+    networks:
+      - ai-network
+
+  # 2. 프론트엔드 서비스
+  frontend:
+    build: ./frontend
+    container_name: depression-frontend
+    ports:
+      - "8501:8501"
+    environment:
+      - BACKEND_URL=http://backend:8000/predict
+    depends_on:
+      - backend
+    networks:
+      - ai-network
+
+networks:
+  ai-network:
+    driver: bridge
