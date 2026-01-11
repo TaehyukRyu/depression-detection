@@ -2,7 +2,6 @@
 
 <div align="center">
 
-**텍스트와 음성 데이터를 활용한 멀티모달 딥러닝 기반 청소년 우울 신호 조기 탐지 시스템**
 
 [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-red.svg)](https://pytorch.org/)
