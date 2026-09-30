@@ -134,18 +134,23 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    R["depression-detection"] --> SRC["src"]
-    R --> NB["notebooks<br/>실험 노트북 4개"]
+    R["depression-detection"] --> NB["notebooks<br/>실험 노트북 4개"]
     R --> RS["results<br/>단계별 결과 CSV"]
     R --> DC["docs<br/>계획서 · 실험 기록 PDF"]
     R --> MD["models<br/>모델 파일 안내"]
-    SRC --> BE["backend<br/>FastAPI 서버"]
-    SRC --> FE["frontend<br/>Streamlit 화면"]
-    SRC --> DK["docker-compose.yml"]
-    BE --> B1["main.py<br/>요청 받기 · 음성 인식"]
-    BE --> B2["preprocessing.py<br/>입력 전처리"]
-    BE --> B3["model.py<br/>모델 구조"]
-    BE --> B4["inference.py<br/>예측"]
+    R --> S
+    subgraph S["src"]
+        direction TB
+        FE["frontend<br/>Streamlit 화면"]
+        DK["docker-compose.yml<br/>화면 + 서버 같이 실행"]
+        subgraph BE["backend · FastAPI 서버"]
+            direction LR
+            B1["main.py<br/>요청 받기 · 음성 인식"]
+            B2["preprocessing.py<br/>입력 전처리"]
+            B3["model.py<br/>모델 구조"]
+            B4["inference.py<br/>예측"]
+        end
+    end
 ```
 
 ## 실행
