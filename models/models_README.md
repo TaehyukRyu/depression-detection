@@ -26,7 +26,7 @@
 
 **레이블 설명:**
 - **6-class**: 기쁨, 당황, 분노, 불안, 상처, 슬픔
-- **4-class**: 일반(기쁨+당황+분노), 우울(불안+상처+슬픔)
+- **4-class**: 긍정, 중립, 일반 부정, 우울 신호 (세부 감정 기준으로 다시 묶음)
 
 ---
 
@@ -60,18 +60,20 @@
 
 ### 1. 모델 다운로드
 
-필요한 모델 다운로드 후 이 폴더에 저장:
+필요한 모델 다운로드 후 `src/backend/models/`에 저장 (서버가 이 위치에서 모델을 읽음):
 
 ```
-models/
-├── README.md
-└── phase3_six_label_all_text_phq9_multimodal.pt  ← 여기에 저장
+src/backend/
+└── models/
+    └── phase3_six_label_all_text_phq9_multimodal.pt  ← 여기에 저장
 ```
 
 ### 2. 모델 로드 (Python)
 
+`src/backend` 폴더에서 실행:
+
 ```python
-from src.model import load_model
+from model import load_model
 
 # 멀티모달 모델 로드
 model = load_model(
@@ -84,7 +86,7 @@ model = load_model(
 ### 3. 추론 실행
 
 ```python
-from src.inference import DepressionDetector
+from inference import DepressionDetector
 
 detector = DepressionDetector(
     model_path='models/phase3_six_label_all_text_phq9_multimodal.pt',
@@ -141,7 +143,7 @@ result = detector.predict(
 # 하이퍼파라미터
 batch_size = 8
 epochs = 6
-learning_rate = 1e-5 (text), 1e-4 (classifier)
+learning_rate = 1e-5
 optimizer = AdamW
 weight_decay = 0.01
 dropout = 0.3
@@ -179,12 +181,11 @@ models/*.pth
 ## 🔗 관련 링크
 
 - [메인 README](../README.md)
-- [코드 사용법](../src/README.md)
 - [실험 노트북](../notebooks/)
 - [성능 비교 결과](../results/)
 
 ---
 
-**마지막 업데이트**: 2024.11.24  
+**마지막 업데이트**: 2026.09.30  
 **총 모델 수**: 12개  
 **최종 모델**: `phase3_six_label_all_text_phq9_multimodal.pt`

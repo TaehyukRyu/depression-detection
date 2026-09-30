@@ -164,7 +164,7 @@ docker compose up --build
 
 - 모델 파일(`phase3_six_label_all_text_phq9_multimodal.pt`, 약 450MB)은 용량 때문에 저장소에 올리지 않았다. 필요하면 메일로 요청하면 된다. 받은 파일은 `src/backend/models/` 안에 넣는다.
 - 실행하면 화면은 http://localhost:8501, 서버는 http://localhost:8000 에서 열린다.
-- 음성 파일은 WAV나 FLAC으로 올려야 한다. 글자 변환에 Google 음성 인식을 써서 인터넷 연결도 필요하다.
+- 음성 파일은 WAV, MP3, FLAC 중 하나로 올리면 된다. 글자 변환에 Google 음성 인식을 써서 인터넷 연결이 필요하다.
 
 <details>
 <summary>Docker 없이 실행</summary>

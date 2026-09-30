@@ -1,6 +1,8 @@
 import os
 import shutil
 import uuid
+import librosa
+import soundfile as sf
 import speech_recognition as sr  # STT 라이브러리 추가
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from inference import DepressionDetector
@@ -53,6 +55,15 @@ def audio_to_text(file_path):
         # 포맷 문제일 수 있으므로 빈 문자열 반환
         return ""
 
+def mp3_to_wav(file_path):
+    """
+    STT 라이브러리는 mp3를 읽지 못하므로 같은 이름의 wav 파일로 변환합니다.
+    """
+    wav_path = os.path.splitext(file_path)[0] + ".wav"
+    data, sample_rate = librosa.load(file_path, sr=16000)
+    sf.write(wav_path, data, sample_rate)
+    return wav_path
+
 # ==========================================
 # 3. 엔드포인트 정의
 # ==========================================
@@ -70,12 +81,13 @@ async def predict(audio: UploadFile = File(...)):
     """
     
     # 1) 파일 확장자 검사
-    # STT 라이브러리는 wav, flac을 가장 잘 지원합니다. (mp3는 추가 설정 필요할 수 있음)
+    # STT 라이브러리는 wav, flac, aiff만 읽을 수 있어서 mp3는 wav로 바꿔서 넘깁니다.
     if not audio.filename.lower().endswith(('.wav', '.flac', '.aiff', '.mp3')):
-        raise HTTPException(status_code=400, detail="지원되는 오디오 형식: wav, flac, aiff")
+        raise HTTPException(status_code=400, detail="지원되는 오디오 형식: wav, flac, aiff, mp3")
 
     unique_filename = f"{uuid.uuid4()}_{audio.filename}"
     temp_path = os.path.join(TEMP_DIR, unique_filename)
+    wav_path = None
 
     try:
         # 2) 파일 저장
@@ -84,7 +96,9 @@ async def predict(audio: UploadFile = File(...)):
             
         # 3) STT 실행 (음성 -> 텍스트)
         print("📝 음성을 텍스트로 변환 중...")
-        stt_text = audio_to_text(temp_path)
+        if temp_path.lower().endswith('.mp3'):
+            wav_path = mp3_to_wav(temp_path)
+        stt_text = audio_to_text(wav_path or temp_path)
         
         if not stt_text:
             # STT 실패 시 처리 (예: 기본값이나 에러 반환)
@@ -121,6 +135,8 @@ async def predict(audio: UploadFile = File(...)):
         # 5) 임시 파일 삭제
         if os.path.exists(temp_path):
             os.remove(temp_path)
+        if wav_path and os.path.exists(wav_path):
+            os.remove(wav_path)
 
 if __name__ == "__main__":
     import uvicorn
