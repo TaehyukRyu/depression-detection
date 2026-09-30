@@ -22,13 +22,14 @@
 ## 동작 흐름
 
 ```mermaid
-flowchart LR
-    U(["사용자"]) -->|"음성 파일"| F["화면<br/>Streamlit"]
-    F --> B["서버<br/>FastAPI"]
-    B --> S["말을 글자로 변환<br/>Google 음성 인식"]
-    S --> P["글자 · 목소리<br/>숫자로 바꾸기"]
-    P --> M["AI 모델"]
-    M -->|"감정 + 우울 신호 여부"| F
+flowchart TB
+    U(["사용자"]) -->|"음성 파일 업로드"| F["화면 · Streamlit"]
+    F --> B
+    subgraph B["서버 · FastAPI"]
+        direction LR
+        S["말을 글자로 변환<br/>Google 음성 인식"] --> P["글자 · 목소리<br/>숫자로 바꾸기"] --> M["AI 모델"]
+    end
+    B -->|"감정 + 우울 신호 여부"| R(["화면에 결과 표시"])
 ```
 
 화면과 서버는 각각 Docker로 묶여 있고 `docker compose` 한 번으로 같이 뜬다.
